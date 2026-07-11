@@ -7,10 +7,10 @@ namespace CodeReviews.Console.CodingTracker
     {
         static void Main(string[] args)
         {
-            AnsiConsole.MarkupLine("[bold green]Welcome to the Coding Tracker![/]");
-            AnsiConsole.MarkupLine("[bold yellow]This application helps you track your coding sessions.[/]");
-            AnsiConsole.MarkupLine("[bold blue]Press any key to exit...[/]");
-            AnsiConsole.Console.Input.ReadKey(true);
+            var appView = new AppView();
+            var appController = new AppController(appView);
+
+            appController.Run();
         }
     }
 }
