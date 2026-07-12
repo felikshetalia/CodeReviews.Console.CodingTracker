@@ -1,13 +1,10 @@
-﻿using System;
-using Spectre.Console;
-
-namespace CodeReviews.Console.CodingTracker
+﻿namespace CodeReviews.Console.CodingTracker
 {
     class Program
     {
         static void Main(string[] args)
         {
-            var appView = new AppView();
+            IAppView appView = new AppView();
             var appController = new AppController(appView);
 
             appController.Run();

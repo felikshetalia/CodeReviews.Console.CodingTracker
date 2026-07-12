@@ -1,6 +1,3 @@
-using System;
-using Spectre.Console;
-
 namespace CodeReviews.Console.CodingTracker;
 
 public class CodingSession

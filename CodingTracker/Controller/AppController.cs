@@ -4,9 +4,9 @@ namespace CodeReviews.Console.CodingTracker;
 
 public sealed class AppController
 {
-    private readonly AppView _appView;
+    private readonly IAppView _appView;
 
-    public AppController(AppView _view) => _appView = _view;
+    public AppController(IAppView _view) => _appView = _view;
 
     public void Run()
     {
