@@ -34,7 +34,7 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
             {
                 sessions.Add(new CodingSession
                 {
-                    Id = (int)row.Id,
+                    Id = row.Id,
                     StartTime = ParseDateFromString(row.StartTime),
                     EndTime = ParseDateFromString(row.EndTime),
                 });
@@ -64,7 +64,7 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
             ? null
             : new CodingSession
             {
-                Id = (int)record.Id,
+                Id = record.Id,
                 StartTime = ParseDateFromString(record.StartTime),
                 EndTime = ParseDateFromString(record.EndTime),
             };
@@ -125,6 +125,7 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
         {
             var dto = new CodingSessionDTO
             {
+                Id = session.Id,
                 StartTime = FormatDateTimeToString(session.StartTime),
                 EndTime = FormatDateTimeToString(session.EndTime)
             };
