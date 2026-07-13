@@ -29,6 +29,7 @@ public sealed class CodingSessionController : ICodingSessionController
 
     public void DeleteSession()
     {
+        ViewSessions();
         long id = _codingView.GetSessionId("Enter the ID of the session to delete:");
         bool deleted;
         try
@@ -44,6 +45,7 @@ public sealed class CodingSessionController : ICodingSessionController
 
     public void UpdateSession()
     {
+        ViewSessions();
         long id = _codingView.GetSessionId("Enter the ID of the session to update:");
         var (startTime, endTime) = _codingView.GetSessionTimes();
 
