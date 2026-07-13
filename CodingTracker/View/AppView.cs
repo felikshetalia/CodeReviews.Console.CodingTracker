@@ -14,22 +14,14 @@ public sealed class AppView : IAppView
                 .AddChoices(Enum.GetValues<MenuOption>())
                 .UseConverter(FormatMenuOption));
     }
-
-    public void DisplaySessions(List<CodingSession> sessions)
-    {
-        throw new NotImplementedException();
-    }
-
     public void DisplayMessage(string message)
     {
         AnsiConsole.MarkupLine(Markup.Escape(message));
     }
-
     public void DisplayGoodbye()
     {
         AnsiConsole.MarkupLine("[green]Goodbye![/]");
     }
-
     private static string FormatMenuOption(MenuOption option)
     {
         return option switch

@@ -18,8 +18,12 @@ namespace CodeReviews.Console.CodingTracker
             var dbInitializer = new DatabaseInitializer(connectionFactory);
             dbInitializer.Initialize();
 
+            ICodingSessionRepo repository = new CodingSessionRepo(connectionFactory);
+            ICodingSessionService service = new CodingSessionService(repository);
+            ICodingSessionView codingSessionView = new CodingSessionView();
+            ICodingSessionController codingSessionController = new CodingSessionController(service, codingSessionView);
             IAppView appView = new AppView();
-            var appController = new AppController(appView);
+            var appController = new AppController(appView, codingSessionController);
 
             appController.Run();
         }

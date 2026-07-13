@@ -4,8 +4,12 @@ namespace CodeReviews.Console.CodingTracker;
 public sealed class AppController
 {
     private readonly IAppView _appView;
-
-    public AppController(IAppView _view) => _appView = _view;
+    private readonly ICodingSessionController _codingController;
+    public AppController(IAppView _view, ICodingSessionController _controller)
+    {
+        _appView = _view;
+        _codingController = _controller;
+    }
 
     public void Run()
     {
@@ -18,19 +22,19 @@ public sealed class AppController
             switch (selectedOption)
             {
                 case MenuOption.View:
-                    ShowPlaceholder("View sessions");
+                    _codingController.ViewSessions();
                     break;
 
                 case MenuOption.Add:
-                    ShowPlaceholder("Add session");
+                    _codingController.AddSession();
                     break;
 
                 case MenuOption.Edit:
-                    ShowPlaceholder("Update session");
+                    _codingController.UpdateSession();
                     break;
 
                 case MenuOption.Delete:
-                    ShowPlaceholder("Delete session");
+                    _codingController.DeleteSession();
                     break;
 
                 case MenuOption.Close:
@@ -44,12 +48,6 @@ public sealed class AppController
                         "Unknown menu option.");
             }
         }
-    }
-
-    private static void ShowPlaceholder(string action)
-    {
-        AnsiConsole.WriteLine($"{action} is not implemented yet.");
-        AnsiConsole.WriteLine("Press any key to return to the menu.");
-        AnsiConsole.Console.Input.ReadKey(true);
+        _appView.DisplayGoodbye();
     }
 }

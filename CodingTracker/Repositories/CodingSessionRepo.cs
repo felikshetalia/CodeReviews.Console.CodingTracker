@@ -30,11 +30,17 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
 
             foreach (var row in rows)
             {
+                if (!TryParseDateFromString(row.StartTime, out var startTime) ||
+                    !TryParseDateFromString(row.EndTime, out var endTime))
+                {
+                    continue;
+                }
+
                 sessions.Add(new CodingSession
                 {
                     Id = row.Id,
-                    StartTime = ParseDateFromString(row.StartTime),
-                    EndTime = ParseDateFromString(row.EndTime),
+                    StartTime = startTime,
+                    EndTime = endTime,
                 });
             }
         }
@@ -58,12 +64,15 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
 
             session = record == null
             ? null
-            : new CodingSession
-            {
-                Id = record.Id,
-                StartTime = ParseDateFromString(record.StartTime),
-                EndTime = ParseDateFromString(record.EndTime),
-            };
+            : TryParseDateFromString(record.StartTime, out var startTime) &&
+              TryParseDateFromString(record.EndTime, out var endTime)
+                ? new CodingSession
+                {
+                    Id = record.Id,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                }
+                : null;
         }
 
         return session;
@@ -131,12 +140,22 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
         return affectedRows == 1;
     }
 
-    private static DateTime ParseDateFromString(string value)
-        => DateTime.ParseExact(
+    private static bool TryParseDateFromString(string? value, out DateTime result)
+    {
+        result = default;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return DateTime.TryParseExact(
             value,
             _dateFormat,
-            CultureInfo.InvariantCulture);
-
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out result);
+    }
 
     private static string FormatDateTimeToString(DateTime obj)
         => obj.ToString(_dateFormat, CultureInfo.InvariantCulture);
