@@ -2,9 +2,7 @@
 namespace CodeReviews.Console.CodingTracker;
 
 using Dapper;
-using Spectre.Console;
 using System.Globalization;
-using System.Linq;
 
 public sealed class CodingSessionRepo : ICodingSessionRepo
 {
@@ -39,8 +37,6 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
                     EndTime = ParseDateFromString(row.EndTime),
                 });
             }
-
-            connection.Close();
         }
 
         return sessions;
@@ -68,7 +64,6 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
                 StartTime = ParseDateFromString(record.StartTime),
                 EndTime = ParseDateFromString(record.EndTime),
             };
-            connection.Close();
         }
 
         return session;
@@ -92,25 +87,25 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
             };
             connection.Open();
             connection.Execute(query, dto);
-            connection.Close();
         }
 
     }
-    public void Delete(long id)
+    public bool Delete(long id)
     {
         const string query = @"
             DELETE FROM CodingSessions
             WHERE Id = @Id;
         ";
 
+        int affectedRows;
         using (var connection = _connectionFactory.CreateConnection())
         {
             connection.Open();
-            connection.Execute(query, new { Id = id });
-            connection.Close();
+            affectedRows = connection.Execute(query, new { Id = id });
         }
+        return affectedRows == 1;
     }
-    public void Update(CodingSession session)
+    public bool Update(CodingSession session)
     {
         if (session == null)
             throw new ArgumentNullException();
@@ -121,6 +116,7 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
             WHERE Id = @Id;
         ";
 
+        int affectedRows;
         using (var connection = _connectionFactory.CreateConnection())
         {
             var dto = new CodingSessionDTO
@@ -130,9 +126,9 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
                 EndTime = FormatDateTimeToString(session.EndTime)
             };
             connection.Open();
-            connection.Execute(query, dto);
-            connection.Close();
+            affectedRows = connection.Execute(query, dto);
         }
+        return affectedRows == 1;
     }
 
     private static DateTime ParseDateFromString(string value)
