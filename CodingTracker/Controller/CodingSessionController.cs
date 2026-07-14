@@ -14,16 +14,26 @@ public sealed class CodingSessionController : ICodingSessionController
     }
     public void AddSession()
     {
-        var (startTime, endTime) = _codingView.GetSessionTimes();
+        AddSessionOption opt = _codingView.DisplayAddSessionMenu();
 
-        try
+        switch (opt)
         {
-            _codingService.Add(startTime, endTime);
-            _codingView.DisplayMessage("Coding session added successfully.");
-        }
-        catch (ArgumentException ex)
-        {
-            _codingView.DisplayError(ex.Message);
+            case AddSessionOption.Manual:
+                AddManualSession();
+                break;
+
+            case AddSessionOption.Stopwatch:
+                AddTimedSession();
+                break;
+
+            case AddSessionOption.Back:
+                return;
+
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(opt),
+                    opt,
+                    "Unknown add-session option.");
         }
     }
 
@@ -151,6 +161,40 @@ public sealed class CodingSessionController : ICodingSessionController
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(option), option, "Unknown filter option.");
+        }
+    }
+
+    private void AddManualSession()
+    {
+        var (startTime, endTime) = _codingView.GetSessionTimes();
+
+        try
+        {
+            _codingService.Add(startTime, endTime);
+            _codingView.DisplayMessage("Coding session added successfully.");
+        }
+        catch (ArgumentException ex)
+        {
+            _codingView.DisplayError(ex.Message);
+        }
+    }
+
+    private void AddTimedSession()
+    {
+        DateTime startTime = DateTime.Now;
+
+        _codingView.WaitStopwatch();
+
+        DateTime endTime = DateTime.Now;
+
+        try
+        {
+            _codingService.Add(startTime, endTime);
+            _codingView.DisplayMessage($"Session recorded. Duration: " + $"{endTime - startTime:hh\\:mm\\:ss}");
+        }
+        catch (ArgumentException ex)
+        {
+            _codingView.DisplayError(ex.Message);
         }
     }
 }

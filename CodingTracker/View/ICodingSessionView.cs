@@ -11,4 +11,6 @@ public interface ICodingSessionView
     int GetYear();
     FilterOption DisplayFilterMenu();
     DateTime GetFilterDate(string prompt);
+    AddSessionOption DisplayAddSessionMenu();
+    void WaitStopwatch();
 }

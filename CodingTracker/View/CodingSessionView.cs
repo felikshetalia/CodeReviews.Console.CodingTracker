@@ -65,6 +65,40 @@ public sealed class CodingSessionView : ICodingSessionView
         return (startTime, endTime);
     }
 
+    public Month GetMonth()
+        => AnsiConsole.Prompt(
+            new SelectionPrompt<Month>()
+                .Title("Select a month:")
+                .AddChoices(Enum.GetValues<Month>()));
+
+    public int GetYear()
+        => AnsiConsole.Prompt(
+            new TextPrompt<int>("Enter the year:")
+                .Validate(year =>
+                    year is >= 1 and <= 9999
+                        ? ValidationResult.Success()
+                        : ValidationResult.Error(
+                            "[red]Enter a valid year.[/]")));
+
+    public FilterOption DisplayFilterMenu()
+        => AnsiConsole.Prompt(
+            new SelectionPrompt<FilterOption>()
+                .Title("\nHow would you like to filter the sessions?")
+                .AddChoices(Enum.GetValues<FilterOption>()));
+
+    public DateTime GetFilterDate(string prompt) => GetDateTime(prompt, _filterDateFormat);
+
+    public AddSessionOption DisplayAddSessionMenu()
+        => AnsiConsole.Prompt(
+            new SelectionPrompt<AddSessionOption>()
+                .Title("How would you like to add a session?")
+                .AddChoices(Enum.GetValues<AddSessionOption>()));
+    public void WaitStopwatch()
+    {
+        AnsiConsole.MarkupLine("[green]Timer started.[/] Press [yellow]Enter[/] to stop.");
+        while (System.Console.ReadKey(true).Key != ConsoleKey.Enter) ;
+    }
+
     private static DateTime GetDateTime(string prompt, string format)
     {
         while (true)
@@ -94,27 +128,4 @@ public sealed class CodingSessionView : ICodingSessionView
         AnsiConsole.MarkupLine("\n[grey]Press any key to continue.[/]");
         AnsiConsole.Console.Input.ReadKey(true);
     }
-
-    public Month GetMonth()
-        => AnsiConsole.Prompt(
-            new SelectionPrompt<Month>()
-                .Title("Select a month:")
-                .AddChoices(Enum.GetValues<Month>()));
-
-    public int GetYear()
-        => AnsiConsole.Prompt(
-            new TextPrompt<int>("Enter the year:")
-                .Validate(year =>
-                    year is >= 1 and <= 9999
-                        ? ValidationResult.Success()
-                        : ValidationResult.Error(
-                            "[red]Enter a valid year.[/]")));
-
-    public FilterOption DisplayFilterMenu()
-        => AnsiConsole.Prompt(
-            new SelectionPrompt<FilterOption>()
-                .Title("\nHow would you like to filter the sessions?")
-                .AddChoices(Enum.GetValues<FilterOption>()));
-
-    public DateTime GetFilterDate(string prompt) => GetDateTime(prompt, _filterDateFormat);
 }
