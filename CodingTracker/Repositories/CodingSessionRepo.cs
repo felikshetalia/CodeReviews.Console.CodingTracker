@@ -139,6 +139,163 @@ public sealed class CodingSessionRepo : ICodingSessionRepo
         }
         return affectedRows == 1;
     }
+    public List<CodingSession> GetSessionsByDay(DateTime day)
+    {
+        List<CodingSession> sessions = new();
+
+        var start = day.Date;
+        var end = day.Date.AddDays(1);
+
+        const string query = @"
+            SELECT Id, StartTime, EndTime
+            FROM CodingSessions
+            WHERE StartTime >= @Start AND StartTime < @End
+            ORDER BY StartTime DESC;
+        ";
+
+        using (var connection = _connectionFactory.CreateConnection())
+        {
+            connection.Open();
+
+            IEnumerable<CodingSessionDTO> rows =
+                connection.Query<CodingSessionDTO>(query, new { Start = start, End = end });
+
+            foreach (var row in rows)
+            {
+                if (!TryParseDateFromString(row.StartTime, out var startTime) ||
+                    !TryParseDateFromString(row.EndTime, out var endTime))
+                {
+                    continue;
+                }
+
+                sessions.Add(new CodingSession
+                {
+                    Id = row.Id,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                });
+            }
+        }
+
+        return sessions;
+    }
+    public List<CodingSession> GetSessionsInBetweenDates(DateTime start, DateTime end)
+    {
+        List<CodingSession> sessions = new();
+
+        const string query = @"
+            SELECT Id, StartTime, EndTime
+            FROM CodingSessions
+            WHERE StartTime >= @Start AND StartTime < @End
+            ORDER BY StartTime DESC;
+        ";
+
+        using (var connection = _connectionFactory.CreateConnection())
+        {
+            connection.Open();
+
+            IEnumerable<CodingSessionDTO> rows =
+                connection.Query<CodingSessionDTO>(query, new { Start = start, End = end });
+
+            foreach (var row in rows)
+            {
+                if (!TryParseDateFromString(row.StartTime, out var startTime) ||
+                    !TryParseDateFromString(row.EndTime, out var endTime))
+                {
+                    continue;
+                }
+
+                sessions.Add(new CodingSession
+                {
+                    Id = row.Id,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                });
+            }
+        }
+
+        return sessions;
+    }
+    public List<CodingSession> GetSessionsByMonthOfYear(int year, int monthIndicator)
+    {
+        List<CodingSession> sessions = new();
+
+        var start = new DateTime(year, monthIndicator, 1);
+        var end = start.AddMonths(1);
+
+        const string query = @"
+            SELECT Id, StartTime, EndTime
+            FROM CodingSessions
+            WHERE StartTime >= @Start AND StartTime < @End
+            ORDER BY StartTime DESC;
+        ";
+
+        using (var connection = _connectionFactory.CreateConnection())
+        {
+            connection.Open();
+
+            IEnumerable<CodingSessionDTO> rows =
+                connection.Query<CodingSessionDTO>(query, new { Start = start, End = end });
+
+            foreach (var row in rows)
+            {
+                if (!TryParseDateFromString(row.StartTime, out var startTime) ||
+                    !TryParseDateFromString(row.EndTime, out var endTime))
+                {
+                    continue;
+                }
+
+                sessions.Add(new CodingSession
+                {
+                    Id = row.Id,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                });
+            }
+        }
+
+        return sessions;
+    }
+    public List<CodingSession> GetSessionsByYear(int year)
+    {
+        List<CodingSession> sessions = new();
+
+        var start = new DateTime(year, 1, 1);
+        var end = start.AddYears(1);
+
+        const string query = @"
+            SELECT Id, StartTime, EndTime
+            FROM CodingSessions
+            WHERE StartTime >= @Start AND StartTime < @End
+            ORDER BY StartTime DESC;
+        ";
+
+        using (var connection = _connectionFactory.CreateConnection())
+        {
+            connection.Open();
+
+            IEnumerable<CodingSessionDTO> rows =
+                connection.Query<CodingSessionDTO>(query, new { Start = start, End = end });
+
+            foreach (var row in rows)
+            {
+                if (!TryParseDateFromString(row.StartTime, out var startTime) ||
+                    !TryParseDateFromString(row.EndTime, out var endTime))
+                {
+                    continue;
+                }
+
+                sessions.Add(new CodingSession
+                {
+                    Id = row.Id,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                });
+            }
+        }
+
+        return sessions;
+    }
 
     private static bool TryParseDateFromString(string? value, out DateTime result)
     {

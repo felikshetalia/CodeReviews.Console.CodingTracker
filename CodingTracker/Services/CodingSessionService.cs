@@ -37,4 +37,31 @@ public sealed class CodingSessionService : ICodingSessionService
 
         return _repository.Update(session);
     }
+    public List<CodingSession> GetByDay(DateTime date) => _repository.GetSessionsByDay(date);
+    public List<CodingSession> GetByWeek(DateTime date)
+    {
+        int daysSinceMonday = ((int)date.DayOfWeek + 6) % 7;
+        DateTime startOfWeek = date.Date.AddDays(-daysSinceMonday);
+        DateTime endOfWeek = startOfWeek.AddDays(7);
+
+        return _repository.GetSessionsInBetweenDates(startOfWeek, endOfWeek);
+    }
+
+    public List<CodingSession> GetByMonthOfYear(int year, int month)
+    {
+        if (year < 1 || year > 9999)
+            throw new ArgumentOutOfRangeException(nameof(year));
+
+        if (month < 1 || month > 12)
+            throw new ArgumentOutOfRangeException(nameof(month));
+
+        return _repository.GetSessionsByMonthOfYear(year, month);
+    }
+    public List<CodingSession> GetByYear(int year)
+    {
+        if (year < 1 || year > 9999)
+            throw new ArgumentOutOfRangeException(nameof(year));
+
+        return _repository.GetSessionsByYear(year);
+    }
 }

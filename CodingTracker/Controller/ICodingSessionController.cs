@@ -1,6 +1,6 @@
 public interface ICodingSessionController
 {
-    bool ViewSessions();
+    void ViewSessions();
 
     void AddSession();
 

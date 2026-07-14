@@ -29,7 +29,8 @@ public sealed class CodingSessionController : ICodingSessionController
 
     public void DeleteSession()
     {
-        if(!ViewSessions())
+        List<CodingSession>? sessions = GetSessionsSafely(_codingService.GetAll);
+        if (sessions == null || sessions.Count == 0)
         {
             _codingView.DisplayMessage("No coding sessions available to delete.");
             return;
@@ -53,9 +54,10 @@ public sealed class CodingSessionController : ICodingSessionController
 
     public void UpdateSession()
     {
-        if (!ViewSessions())
+        List<CodingSession>? sessions = GetSessionsSafely(_codingService.GetAll);
+        if (sessions == null || sessions.Count == 0)
         {
-            _codingView.DisplayMessage("No coding sessions available to delete.");
+            _codingView.DisplayMessage("No coding sessions available to update.");
             return;
         }
         long id = _codingView.GetSessionId("Enter the ID of the session to update:");
@@ -85,20 +87,70 @@ public sealed class CodingSessionController : ICodingSessionController
         }
     }
 
-    public bool ViewSessions()
+    public void ViewSessions()
     {
-        List<CodingSession> sessions;
+        List<CodingSession>? sessions = GetSessionsSafely(_codingService.GetAll);
+        if (sessions is null) return;
+        _codingView.DisplaySessions(sessions);
+        if (sessions.Count == 0) return;
 
+        while (true)
+        {
+            FilterOption opt = _codingView.DisplayFilterMenu();
+            if (opt == FilterOption.Back) return;
+
+            List<CodingSession>? filtered = GetFilteredSessions(opt);
+
+            if (filtered == null) return;
+
+            sessions = filtered;
+        }
+
+    }
+
+    private List<CodingSession>? GetSessionsSafely(Func<List<CodingSession>> retrieval)
+    {
         try
         {
-            sessions = _codingService.GetAll();
-            _codingView.DisplaySessions(sessions);
-            return sessions.Count > 0;
+            return retrieval();
         }
-        catch (SqliteException ex)
+        catch (Exception ex)
         {
-            _codingView.DisplayError($"Unexpected SQLite error {ex.SqliteErrorCode}: {ex.Message}");
+            _codingView.DisplayError($"Unexpected error: {ex.Message}");
+            return null;
         }
-        return false;
+    }
+    private List<CodingSession>? GetFilteredSessions(FilterOption option)
+    {
+        switch (option)
+        {
+            case FilterOption.ShowAll:
+                return GetSessionsSafely(_codingService.GetAll);
+            case FilterOption.Day:
+                {
+                    DateTime date = _codingView.GetFilterDate("Enter the date:");
+                    return GetSessionsSafely(() => _codingService.GetByDay(date));
+                }
+            case FilterOption.Week:
+                {
+                    DateTime date = _codingView.GetFilterDate("Enter any date within the desired week:");
+                    return GetSessionsSafely(() => _codingService.GetByWeek(date));
+                }
+            case FilterOption.Month:
+                {
+                    Month month = _codingView.GetMonth();
+                    int year = _codingView.GetYear();
+                    return GetSessionsSafely(() => _codingService.GetByMonthOfYear(year, (int)month));
+                }
+
+            case FilterOption.Year:
+                {
+                    int year = _codingView.GetYear();
+                    return GetSessionsSafely(() => _codingService.GetByYear(year));
+                }
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(option), option, "Unknown filter option.");
+        }
     }
 }

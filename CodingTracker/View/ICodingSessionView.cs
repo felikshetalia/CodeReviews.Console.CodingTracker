@@ -7,4 +7,8 @@ public interface ICodingSessionView
     long GetSessionId(string prompt);
     void DisplayMessage(string message);
     void DisplayError(string message);
+    Month GetMonth();
+    int GetYear();
+    FilterOption DisplayFilterMenu();
+    DateTime GetFilterDate(string prompt);
 }
