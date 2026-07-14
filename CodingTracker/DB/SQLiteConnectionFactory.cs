@@ -1,7 +1,7 @@
 using System.Data.Common;
 using Microsoft.Data.Sqlite;
 
-namespace CodeReviews.Console.CodingTracker.Data;
+namespace CodeReviews.Console.CodingTracker;
 
 public sealed class SQLiteConnectionFactory : IDatabaseConnectionFactory
 {
