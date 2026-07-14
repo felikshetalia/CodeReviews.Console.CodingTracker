@@ -29,12 +29,20 @@ public sealed class CodingSessionController : ICodingSessionController
 
     public void DeleteSession()
     {
-        ViewSessions();
+        if(!ViewSessions())
+        {
+            _codingView.DisplayMessage("No coding sessions available to delete.");
+            return;
+        }
         long id = _codingView.GetSessionId("Enter the ID of the session to delete:");
-        bool deleted;
         try
         {
-            deleted = _codingService.Delete(id);
+            bool deleted = _codingService.Delete(id);
+            if (!deleted)
+            {
+                _codingView.DisplayError($"Coding session {id} was not found.");
+                return;
+            }
             _codingView.DisplayMessage("Coding session deleted successfully.");
         }
         catch (SqliteException ex)
@@ -45,8 +53,20 @@ public sealed class CodingSessionController : ICodingSessionController
 
     public void UpdateSession()
     {
-        ViewSessions();
+        if (!ViewSessions())
+        {
+            _codingView.DisplayMessage("No coding sessions available to delete.");
+            return;
+        }
         long id = _codingView.GetSessionId("Enter the ID of the session to update:");
+
+        CodingSession? session = _codingService.GetOne(id);
+        if (session == null)
+        {
+            _codingView.DisplayError($"Coding session {id} was not found.");
+            return;
+        }
+
         var (startTime, endTime) = _codingView.GetSessionTimes();
 
         try
@@ -65,7 +85,7 @@ public sealed class CodingSessionController : ICodingSessionController
         }
     }
 
-    public void ViewSessions()
+    public bool ViewSessions()
     {
         List<CodingSession> sessions;
 
@@ -73,10 +93,12 @@ public sealed class CodingSessionController : ICodingSessionController
         {
             sessions = _codingService.GetAll();
             _codingView.DisplaySessions(sessions);
+            return sessions.Count > 0;
         }
         catch (SqliteException ex)
         {
             _codingView.DisplayError($"Unexpected SQLite error {ex.SqliteErrorCode}: {ex.Message}");
         }
+        return false;
     }
 }

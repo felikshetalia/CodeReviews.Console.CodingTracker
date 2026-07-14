@@ -6,8 +6,6 @@ public sealed class AppView : IAppView
 {
     public MenuOption DisplayMainMenu()
     {
-        AnsiConsole.Clear();
-
         return AnsiConsole.Prompt(
             new SelectionPrompt<MenuOption>()
                 .Title("[green]Coding Tracker[/]")

@@ -1,3 +1,5 @@
+using CodeReviews.Console.CodingTracker;
+
 public static class Validators
 {
     public static void ValidateSessionTimes(
@@ -10,4 +12,5 @@ public static class Validators
                 "The end time must be later than the start time.");
         }
     }
+
 }
