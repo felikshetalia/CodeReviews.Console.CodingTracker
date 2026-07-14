@@ -91,7 +91,6 @@ public sealed class CodingSessionController : ICodingSessionController
     {
         List<CodingSession>? sessions = GetSessionsSafely(_codingService.GetAll);
         if (sessions is null) return;
-        _codingView.DisplaySessions(sessions);
         if (sessions.Count == 0) return;
 
         while (true)
@@ -104,6 +103,7 @@ public sealed class CodingSessionController : ICodingSessionController
             if (filtered == null) return;
 
             sessions = filtered;
+            _codingView.DisplaySessions(sessions);
         }
 
     }
