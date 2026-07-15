@@ -45,6 +45,9 @@ public sealed class CodingSessionController : ICodingSessionController
             _codingView.DisplayMessage("No coding sessions available to delete.");
             return;
         }
+
+        _codingView.DisplaySessions(sessions);
+
         long id = _codingView.GetSessionId("Enter the ID of the session to delete:");
         try
         {
@@ -70,6 +73,9 @@ public sealed class CodingSessionController : ICodingSessionController
             _codingView.DisplayMessage("No coding sessions available to update.");
             return;
         }
+
+        _codingView.DisplaySessions(sessions);
+
         long id = _codingView.GetSessionId("Enter the ID of the session to update:");
 
         CodingSession? session = _codingService.GetOne(id);
@@ -101,6 +107,8 @@ public sealed class CodingSessionController : ICodingSessionController
     {
         List<CodingSession>? sessions = GetSessionsSafely(_codingService.GetAll);
         if (sessions is null) return;
+
+        _codingView.DisplaySessions(sessions);
         if (sessions.Count == 0) return;
 
         while (true)
