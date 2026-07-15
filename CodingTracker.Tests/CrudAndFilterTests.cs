@@ -9,28 +9,28 @@ public sealed class CrudAndFilterTests : RepositoryTestBase
     private static readonly List<TestCaseData> sessionTestCases = [
         new TestCaseData(
                 new DateTime(2026, 7, 14, 9, 0, 0),
-                new DateTime(2026, 7, 14, 10, 30, 0))
-            .SetName("Session_OnSameDay"),
+                new DateTime(2026, 7, 14, 10, 30, 0)
+            ),
 
             new TestCaseData(
                 new DateTime(2026, 7, 14, 23, 30, 0),
-                new DateTime(2026, 7, 15, 0, 45, 0))
-            .SetName("Session_AcrossMidnight"),
+                new DateTime(2026, 7, 15, 0, 45, 0)
+            ),
 
             new TestCaseData(
                 new DateTime(2026, 1, 31, 22, 0, 0),
-                new DateTime(2026, 2, 1, 1, 0, 0))
-            .SetName("Session_AcrossMonthBoundary"),
+                new DateTime(2026, 2, 1, 1, 0, 0)
+            ),
 
             new TestCaseData(
                 new DateTime(2025, 12, 31, 23, 0, 0),
-                new DateTime(2026, 1, 1, 2, 0, 0))
-            .SetName("Session_AcrossYearBoundary"),
+                new DateTime(2026, 1, 1, 2, 0, 0)
+            ),
 
             new TestCaseData(
                 new DateTime(2026, 7, 14, 12, 0, 15),
-                new DateTime(2026, 7, 14, 12, 0, 45))
-            .SetName("Session_WithSeconds")
+                new DateTime(2026, 7, 14, 12, 0, 45)
+            ),
     ];
 
     [Test]
@@ -64,6 +64,12 @@ public sealed class CrudAndFilterTests : RepositoryTestBase
             Assert.That(saved.EndTime, Is.EqualTo(session.EndTime));
             Assert.That(saved.Duration, Is.EqualTo(session.EndTime - session.StartTime));
         });
+    }
+
+    [Test]
+    public void Add_NullSession_ThrowsArgumentNullException()
+    {
+        Assert.That(() => repository.Add(null!), Throws.TypeOf<ArgumentNullException>());
     }
 
     [TestCaseSource(nameof(sessionTestCases))]
@@ -210,6 +216,105 @@ public sealed class CrudAndFilterTests : RepositoryTestBase
     }
 
     [Test]
+    public void Delete_ExistingSession_RemovesOnlySelectedSession()
+    {
+        repository.Add(new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 14, 8, 0, 0),
+            EndTime = new DateTime(2026, 7, 14, 9, 0, 0)
+        });
+
+        repository.Add(new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 15, 8, 0, 0),
+            EndTime = new DateTime(2026, 7, 15, 9, 0, 0)
+        });
+
+        List<CodingSession> stored = repository.GetAll();
+
+        long deletedId = stored[0].Id;
+        long remainingId = stored[1].Id;
+
+        bool result = repository.Delete(deletedId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.True);
+            Assert.That(repository.GetOne(deletedId), Is.Null);
+            Assert.That(repository.GetOne(remainingId), Is.Not.Null);
+            Assert.That(repository.GetAll(), Has.Count.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Update_ExistingSession_ChangesOnlySelectedSession()
+    {
+        repository.Add(new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 14, 8, 0, 0),
+            EndTime = new DateTime(2026, 7, 14, 9, 0, 0)
+        });
+
+        repository.Add(new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 15, 8, 0, 0),
+            EndTime = new DateTime(2026, 7, 15, 9, 0, 0)
+        });
+
+        List<CodingSession> stored = repository.GetAll();
+
+        CodingSession target = stored.Single(session => session.StartTime.Day == 14);
+
+        CodingSession untouched = stored.Single(session => session.StartTime.Day == 15);
+
+        DateTime originalUntouchedStart = untouched.StartTime;
+        DateTime originalUntouchedEnd = untouched.EndTime;
+
+        target.StartTime = new DateTime(2026, 7, 14, 12, 0, 0);
+        target.EndTime = new DateTime(2026, 7, 14, 14, 0, 0);
+
+        bool result = repository.Update(target);
+
+        CodingSession? updated = repository.GetOne(target.Id);
+
+        CodingSession? unchanged = repository.GetOne(untouched.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.True);
+            Assert.That(updated!.StartTime, Is.EqualTo(target.StartTime));
+            Assert.That(updated.EndTime, Is.EqualTo(target.EndTime));
+            Assert.That(unchanged!.StartTime, Is.EqualTo(originalUntouchedStart));
+            Assert.That(unchanged.EndTime, Is.EqualTo(originalUntouchedEnd));
+        });
+    }
+
+    [Test]
+    public void GetSessionsInBetweenDates_IncludesSessionAtStartBoundary()
+    {
+        DateTime start = new(2026, 7, 14, 9, 0, 0);
+        DateTime end = new(2026, 7, 14, 12, 0, 0);
+
+        repository.Add(new CodingSession
+        {
+            StartTime = start,
+            EndTime = start.AddHours(1)
+        });
+
+        List<CodingSession> result =
+            repository.GetSessionsInBetweenDates(start, end);
+
+        Assert.That(result, Has.Count.EqualTo(1));
+        Assert.That(result.Single().StartTime, Is.EqualTo(start));
+    }
+
+    [Test]
+    public void Update_NullSession_ThrowsArgumentNullException()
+    {
+        Assert.That(() => repository.Update(null!), Throws.TypeOf<ArgumentNullException>());
+    }
+
+    [Test]
     public void GetSessionsByDay_ReturnsOnlySessionsStartingOnGivenDay()
     {
         var atStartOfDay = new CodingSession
@@ -239,5 +344,99 @@ public sealed class CrudAndFilterTests : RepositoryTestBase
         Assert.That(result, Has.Count.EqualTo(2));
 
         Assert.That(result.Select(x => x.StartTime), Is.EquivalentTo(new[] { atStartOfDay.StartTime, duringDay.StartTime }));
+    }
+    [Test]
+    public void GetSessionsByMonthOfYear_ReturnsOnlySessionsStartingInGivenMonthAndYear()
+    {
+        var januaryFirst = new CodingSession
+        {
+            StartTime = new DateTime(2026, 1, 5, 10, 0, 0),
+            EndTime = new DateTime(2026, 1, 5, 11, 0, 0)
+        };
+
+        var januaryLast = new CodingSession
+        {
+            StartTime = new DateTime(2026, 1, 31, 22, 0, 0),
+            EndTime = new DateTime(2026, 2, 1, 1, 0, 0)
+        };
+
+        var february = new CodingSession
+        {
+            StartTime = new DateTime(2026, 2, 1, 8, 0, 0),
+            EndTime = new DateTime(2026, 2, 1, 9, 0, 0)
+        };
+
+        repository.Add(januaryFirst);
+        repository.Add(januaryLast);
+        repository.Add(february);
+
+        List<CodingSession> result = repository.GetSessionsByMonthOfYear(2026, 1);
+
+        Assert.That(result, Has.Count.EqualTo(2));
+        Assert.That(result.Select(x => x.StartTime), Is.EqualTo(new[] { januaryLast.StartTime, januaryFirst.StartTime }));
+    }
+
+    [Test]
+    public void GetSessionsInBetweenDates_ReturnsOnlySessionsStartingWithinGivenRange()
+    {
+        var beforeRange = new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 14, 8, 0, 0),
+            EndTime = new DateTime(2026, 7, 14, 9, 0, 0)
+        };
+
+        var insideRange = new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 14, 10, 0, 0),
+            EndTime = new DateTime(2026, 7, 14, 11, 0, 0)
+        };
+
+        var atEndBoundary = new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 14, 12, 0, 0),
+            EndTime = new DateTime(2026, 7, 14, 13, 0, 0)
+        };
+
+        repository.Add(beforeRange);
+        repository.Add(insideRange);
+        repository.Add(atEndBoundary);
+
+        List<CodingSession> result = repository.GetSessionsInBetweenDates(
+            new DateTime(2026, 7, 14, 9, 0, 0),
+            new DateTime(2026, 7, 14, 12, 0, 0));
+
+        Assert.That(result, Has.Count.EqualTo(1));
+        Assert.That(result.Single().StartTime, Is.EqualTo(insideRange.StartTime));
+    }
+
+    [Test]
+    public void GetSessionsByYear_ReturnsOnlySessionsStartingInGivenYear()
+    {
+        var previousYear = new CodingSession
+        {
+            StartTime = new DateTime(2025, 12, 31, 23, 0, 0),
+            EndTime = new DateTime(2026, 1, 1, 1, 0, 0)
+        };
+
+        var targetYear = new CodingSession
+        {
+            StartTime = new DateTime(2026, 7, 14, 8, 0, 0),
+            EndTime = new DateTime(2026, 7, 14, 9, 0, 0)
+        };
+
+        var nextYear = new CodingSession
+        {
+            StartTime = new DateTime(2027, 1, 1, 8, 0, 0),
+            EndTime = new DateTime(2027, 1, 1, 9, 0, 0)
+        };
+
+        repository.Add(previousYear);
+        repository.Add(targetYear);
+        repository.Add(nextYear);
+
+        List<CodingSession> result = repository.GetSessionsByYear(2026);
+
+        Assert.That(result, Has.Count.EqualTo(1));
+        Assert.That(result.Single().StartTime, Is.EqualTo(targetYear.StartTime));
     }
 }
